@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Pong</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+  <style>
+  
+	
+	html{
+	box-sizing:border-box;
+	}
+	
+	body{
+	display:flex;
+	justify-content:center;
+	}
+	
+	*{
+	box-sizing:border-box;
+	margin:0;
+	padding:0;
+	}
+		
+  </style>
+</head>
+
+<body>
+	<canvas class="canvas" width="1280px" height="720px"></canvas>
+	  <script>
+		
+		//Constants, és a dir que no canviaran
+		const $canvas = document.querySelector('canvas');
+		const ctx = $canvas.getContext('2d');
+		const $img = document.createElement('img');
+		$img.src = "assets/fondo.png";
+		const alturaRaquetes = 75, ampladaRaquetes = 15;
+		const FletxaDeDalt = 38, FletxaDeBaix = 40, w = 87, s = 83;
+		
+		//Variables, és a dir que canviaran al llarg de l'execusió
+		let FletxaDaltPremuda = false;
+		let FletxaBaixPremuda = false;
+		let contador = 0;
+		let EncaraNoHaEstatTocada = true;
+		let PuntsJugadorEsquerre = 0;
+		let PuntsJugadorDreta = 0;
+		let CapOnVaLaRaquetaEsquerra;
+		let CapOnVaLaRaquetaDreta;
+	
+		
+		//Raquetes i pilota
+		const Raqueta1 = {
+		x:40,
+		y:$canvas.height / 2 - alturaRaquetes / 2,
+		desplaçament:6
+		}
+		
+		const Raqueta2 = {
+		x:$canvas.width - (ampladaRaquetes + Raqueta1.x),
+		y:$canvas.height / 2 - alturaRaquetes / 2,
+		desplaçament:4
+		}
+
+		const pilota = {
+		x:$canvas.width/2,
+		y:$canvas.height/2,
+		radi:12,
+		desplaçamentVertical:Math.floor(Math.random() * (8 - (-8)) + (-8)),
+		desplaçamentHoritzontal: Math.floor(Math.random() * (4 - (-4)) + (-4))
+		}
+		
+		
+		
+		
+		//fer teorema de pitagores per saber quan s'ha de desplaçar per fotograma en linia recta
+	
+		setTimeout(function(){
+		//loop principal del joc 
+		const loop = function() {
+		
+		//si la pilota es diferent a 0 pot executarse tot lo del loop
+		if(pilota.desplaçamentHoritzontal != 0){
+		
+		//netejar canvas i dibuixar-hi	
+		
+		
+			ctx.clearRect(0,0,$canvas.width, $canvas.height);
+			
+			ctx.drawImage($img, 0, 0, 1280, 720);
+			
+			ctx.beginPath();
+			ctx.fillStyle = "#ff4444";
+			ctx.fillRect(Raqueta1.x,Raqueta1.y,ampladaRaquetes,alturaRaquetes);
+			ctx.closePath();
+			
+			ctx.beginPath();
+			ctx.fillStyle = "#4444ff";
+			ctx.fillRect(Raqueta2.x,Raqueta2.y,ampladaRaquetes,alturaRaquetes);
+			ctx.closePath();
+	
+			ctx.beginPath();
+			ctx.arc(pilota.x,pilota.y, pilota.radi,0,Math.PI*2,false);
+			ctx.fillStyle="#ffff00";
+			ctx.fill();
+			ctx.closePath();
+			
+			ctx.beginPath();
+			ctx.fillStyle="white";
+			ctx.font="bold 90px roboto"
+			ctx.fillText(PuntsJugadorEsquerre, 350, 90);
+			ctx.fill();
+			ctx.closePath();
+			
+			ctx.beginPath();
+			ctx.fillStyle="white";
+			ctx.font="bold 90px roboto"
+			ctx.fillText(PuntsJugadorDreta, $canvas.width - (350 + 50) , 90);
+			ctx.fill();
+			ctx.closePath();
+			
+		
+
+		//detectar tecles
+		document.addEventListener("keydown", teclaPremuda, false);
+		document.addEventListener("keyup", teclaNoPremuda, false);
+		
+		
+		function teclaPremuda(e){
+		if(e.keyCode === FletxaDeDalt){FletxaDaltPremuda = true};
+		if(e.keyCode === FletxaDeBaix){FletxaBaixPremuda = true};
+		
+		}
+		
+		function teclaNoPremuda(e){
+		if(e.keyCode === FletxaDeDalt){FletxaDaltPremuda = false};
+		if(e.keyCode === FletxaDeBaix){FletxaBaixPremuda = false};
+		
+		}
+		
+		//moure raquetes
+		
+		
+		
+		if(FletxaDaltPremuda === true){
+			Raqueta1.desplaçament = -6;
+			Raqueta1.y += Raqueta1.desplaçament;
+			CapOnVaLaRaquetaEsquerra = -1;
+		}
+		else if(FletxaBaixPremuda === true){
+			Raqueta1.desplaçament = 6;
+			Raqueta1.y += Raqueta1.desplaçament;
+			CapOnVaLaRaquetaEsquerra = 1;
+		}
+		
+		else{
+			CapOnVaLaRaquetaEsquerra = 0;
+			CapOnVaLaRaquetaDreta = 0;
+		}
+		
+		
+		if(pilota.y > Raqueta2.y + alturaRaquetes / 2) {
+			Raqueta2.y += Raqueta2.desplaçament;
+			CapOnVaLaRaquetaDreta = 1;
+		}
+		
+		else if(pilota.y < Raqueta2.y + alturaRaquetes / 2){
+			Raqueta2.y -= Raqueta2.desplaçament;
+			CapOnVaLaRaquetaDreta = -1;
+		}
+		
+		else if(pilota.y === Raqueta2.y + alturaRaquetes / 2){
+			CapOnVaLaRaquetaDreta = 0;
+		}
+		
+		if(Raqueta1.y + alturaRaquetes >= $canvas.height){
+		Raqueta1.y = $canvas.height - alturaRaquetes;
+		}	
+		
+		if (Raqueta2.y + alturaRaquetes >= $canvas.height){
+		Raqueta2.y = $canvas.height - alturaRaquetes;
+		}
+		
+		if(Raqueta1.y < 0){
+		 Raqueta1.y = 0;
+		}
+		
+		if(Raqueta2.y < 0){
+		 Raqueta2.y = 0;
+		}
+		//moure pilota
+		
+		
+		pilota.x += pilota.desplaçamentHoritzontal;
+		pilota.y += pilota.desplaçamentVertical;
+		
+		
+		//colisions
+		
+			//si la pilota atravessa el costat dret
+		if(pilota.x >= $canvas.width - pilota.radi){
+			PuntsJugadorEsquerre++;
+			
+			pilota.x = $canvas.width/2;
+			pilota.y = $canvas.height/2;
+			Raqueta1.y = $canvas.height / 2 - alturaRaquetes / 2;
+			Raqueta2.y = $canvas.height / 2 - alturaRaquetes / 2;
+			pilota.desplaçamentVertical = Math.floor(Math.random() * (10 - (-10)) + (-10));
+			pilota.desplaçamentHoritzontal =  Math.floor(Math.random() * (5 - (-5)) + (-5));
+
+		}
+		
+			//si la pilota atravessa el costat esquerra
+		if(pilota.x <= 0 + pilota.radi){
+			PuntsJugadorDreta++;
+			
+			pilota.x = $canvas.width/2;
+			pilota.y = $canvas.height/2;
+			Raqueta1.y = $canvas.height / 2 - alturaRaquetes / 2;
+			Raqueta2.y = $canvas.height / 2 - alturaRaquetes / 2;
+			pilota.desplaçamentVertical = Math.floor(Math.random() * (10 - (-10)) + (-10));
+			pilota.desplaçamentHoritzontal =  Math.floor(Math.random() * (5 - (-5)) + (-5));
+		}
+		
+		//rebota amb les parets de dalt i de baix
+		if(pilota.y >= $canvas.height - pilota.radi || pilota.y <= 0 + pilota.radi){
+			pilota.desplaçamentVertical = -pilota.desplaçamentVertical;
+		}
+		
+		/*si colisiona la pilota amb alguna raqueta la variable EncaraNoHaEstatTocada sera falsa durant 1000 milisegons(100 x 10), 
+		doncs mentre no arribi a 1000 milisegons el contador anira pujant gràcies a la línia de baix*/
+		if(EncaraNoHaEstatTocada === false){
+			contador++
+		}
+		//tornar contador al principi perque pilota pugui colisionar amb raquetes
+		if(contador === 100){
+		contador = 0;
+		EncaraNoHaEstatTocada = true;
+		}
+		
+		//quan raquetes van abaix
+		   //colisio part dalt de la Raqueta1
+		   if(EncaraNoHaEstatTocada === true && CapOnVaLaRaquetaEsquerra > 0 && 
+			  pilota.y <= Raqueta1.y + alturaRaquetes / 3 &&
+		      pilota.y + pilota.radi >= Raqueta1.y &&
+			  pilota.x + pilota.radi >= Raqueta1.x &&
+			  pilota.x - pilota.radi <= Raqueta1.x + ampladaRaquetes){
+				   
+				   
+			  EncaraNoHaEstatTocada = false;
+			  pilota.desplaçamentHoritzontal = Math.sqrt(6*6 + 6*6);
+			  pilota.desplaçamentVertical = 0;
+				   
+			}
+		
+			//colisio part mig de la Raqueta 1
+			if(EncaraNoHaEstatTocada === true && CapOnVaLaRaquetaEsquerra > 0 &&
+			   pilota.y >= Raqueta1.y + alturaRaquetes / 3 && 
+			   pilota.y <= Raqueta1.y + 2*(alturaRaquetes / 3)&&
+			   pilota.x + pilota.radi >= Raqueta1.x && 
+			   pilota.x - pilota.radi <= Raqueta1.x + ampladaRaquetes){
+			   
+			   EncaraNoHaEstatTocada = false;
+			   pilota.desplaçamentHoritzontal = 6;
+			   pilota.desplaçamentVertical = 6;
+			   
+			   
+			}
+		  
+			//colisio part baix de la Raqueta 1
+			if(EncaraNoHaEstatTocada === true && CapOnVaLaRaquetaEsquerra > 0 &&
+			   pilota.y >= Raqueta1.y + 2*(alturaRaquetes / 3) && 
+			   pilota.y - pilota.radi <= Raqueta1.y + 3*(alturaRaquetes / 3)&&
+			   pilota.x + pilota.radi >= Raqueta1.x && 
+			   pilota.x - pilota.radi <= Raqueta1.x + ampladaRaquetes){
+			   
+			   EncaraNoHaEstatTocada = false;
+			   pilota.desplaçamentHoritzontal = Math.sqrt(((6*6 + 6*6) / 3));
+			   pilota.desplaçamentVertical = Math.sqrt(((6*6 + 6*6) / 3) * 2);
+				
+			   
+			}
+			
+			//colisio part dalt de la Raqueta 2
+			if(EncaraNoHaEstatTocada === true && CapOnVaLaRaquetaDreta > 0 &&
+			  pilota.y <= Raqueta2.y + alturaRaquetes / 3 &&
+		      pilota.y + pilota.radi >= Raqueta2.y &&
+			  pilota.x + pilota.radi >= Raqueta2.x &&
+			  pilota.x - pilota.radi <= Raqueta2.x + ampladaRaquetes){
+				   
+			  EncaraNoHaEstatTocada = false;
+			  pilota.desplaçamentHoritzontal = -Math.sqrt(6*6 + 6*6);
+			  pilota.desplaçamentVertical = 0;
+			 
+				   
+			}
+			
+			//colisio part mig de la Raqueta 2
+			if(EncaraNoHaEstatTocada === true && CapOnVaLaRaquetaDreta > 0 &&
+			  
+     		   pilota.y >= Raqueta2.y + alturaRaquetes / 3 && 
+			   pilota.y <= Raqueta2.y + 2*(alturaRaquetes / 3)&&
+			   pilota.x + pilota.radi >= Raqueta2.x && 
+			   pilota.x - pilota.radi <= Raqueta2.x + ampladaRaquetes){
+			   
+			   EncaraNoHaEstatTocada = false;
+			   pilota.desplaçamentHoritzontal = -6;
+			   pilota.desplaçamentVertical = 6;
+			  
+			   
+			}
+			
+			//colisio part baix de la Raqueta 2
+			if(EncaraNoHaEstatTocada === true && CapOnVaLaRaquetaDreta > 0 &&
+			    
+			   pilota.y >= Raqueta2.y + 2*(alturaRaquetes / 3) && 
+			   pilota.y - pilota.radi <= Raqueta2.y + 3*(alturaRaquetes / 3)&&
+			   pilota.x + pilota.radi >= Raqueta2.x && 
+			   pilota.x - pilota.radi <= Raqueta2.x + ampladaRaquetes){
+			   
+			   EncaraNoHaEstatTocada = false;
+			    pilota.desplaçamentHoritzontal = -Math.sqrt(((6*6 + 6*6) / 3));
+			   pilota.desplaçamentVertical = Math.sqrt(((6*6 + 6*6) / 3) * 2);
+			  
+			   
+			}
+			
+		//quan raquetes van amunt
+			// colisio part dalt de la Raqueta 1
+			 if(EncaraNoHaEstatTocada === true && CapOnVaLaRaquetaEsquerra < 0 && 
+			  pilota.y <= Raqueta1.y + alturaRaquetes / 3 &&
+		      pilota.y + pilota.radi >= Raqueta1.y &&
+			  pilota.x + pilota.radi >= Raqueta1.x &&
+			  pilota.x - pilota.radi <= Raqueta1.x + ampladaRaquetes){
+				   
+				   
+			  EncaraNoHaEstatTocada = false;
+			  
+			   pilota.desplaçamentHoritzontal = Math.sqrt(((6*6 + 6*6) / 3));
+			   pilota.desplaçamentVertical = -Math.sqrt(((6*6 + 6*6) / 3) * 2);
+				   
+			}
+		
+			//colisio part mig de la Raqueta 1
+			if(EncaraNoHaEstatTocada === true && CapOnVaLaRaquetaEsquerra < 0 &&
+			   pilota.y >= Raqueta1.y + alturaRaquetes / 3 && 
+			   pilota.y <= Raqueta1.y + 2*(alturaRaquetes / 3)&&
+			   pilota.x + pilota.radi >= Raqueta1.x && 
+			   pilota.x - pilota.radi <= Raqueta1.x + ampladaRaquetes){
+			   
+			   EncaraNoHaEstatTocada = false;
+			   pilota.desplaçamentHoritzontal = 6;
+			   pilota.desplaçamentVertical = -6;
+			   
+			   
+			}
+		  
+			//colisio part baix de la Raqueta 1
+			if(EncaraNoHaEstatTocada === true && CapOnVaLaRaquetaEsquerra < 0 &&
+			   pilota.y >= Raqueta1.y + 2*(alturaRaquetes / 3) && 
+			   pilota.y - pilota.radi <= Raqueta1.y + 3*(alturaRaquetes / 3)&&
+			   pilota.x + pilota.radi >= Raqueta1.x && 
+			   pilota.x - pilota.radi <= Raqueta1.x + ampladaRaquetes){
+			   
+			  EncaraNoHaEstatTocada = false;
+			  pilota.desplaçamentHoritzontal = Math.sqrt(6*6 + 6*6);;
+			  pilota.desplaçamentVertical = 0;
+			  
+			   
+			}
+			//colisio part dalt de la raqueta 2
+			if(EncaraNoHaEstatTocada === true && CapOnVaLaRaquetaDreta < 0 && 
+			  pilota.y <= Raqueta2.y + alturaRaquetes / 3 &&
+		      pilota.y + pilota.radi >= Raqueta2.y &&
+			  pilota.x + pilota.radi >= Raqueta2.x &&
+			  pilota.x - pilota.radi <= Raqueta2.x + ampladaRaquetes){
+				   
+				   
+			  EncaraNoHaEstatTocada = false;
+			   pilota.desplaçamentHoritzontal = -Math.sqrt(((6*6 + 6*6) / 3));
+			   pilota.desplaçamentVertical = -Math.sqrt(((6*6 + 6*6) / 3) * 2);
+			  
+				   
+			}
+			
+			//colisio part mig de la Raqueta 2
+			if(EncaraNoHaEstatTocada === true && CapOnVaLaRaquetaDreta < 0 &&
+			   pilota.y >= Raqueta2.y + alturaRaquetes / 3 && 
+			   pilota.y <= Raqueta2.y + 2*(alturaRaquetes / 3)&&
+			   pilota.x + pilota.radi >= Raqueta2.x && 
+			   pilota.x - pilota.radi <= Raqueta2.x + ampladaRaquetes){
+			   
+			   EncaraNoHaEstatTocada = false;
+			   pilota.desplaçamentHoritzontal = -6;
+			   pilota.desplaçamentVertical = -6;
+			   
+			   
+			}
+		  
+			//colisio part baix de la Raqueta 2
+			if(EncaraNoHaEstatTocada === true && CapOnVaLaRaquetaDreta < 0 &&
+			   pilota.y >= Raqueta2.y + 2*(alturaRaquetes / 3) && 
+			   pilota.y - pilota.radi <= Raqueta2.y + 3*(alturaRaquetes / 3)&&
+			   pilota.x + pilota.radi >= Raqueta2.x && 
+			   pilota.x - pilota.radi <= Raqueta2.x + ampladaRaquetes){
+			   
+			  EncaraNoHaEstatTocada = false;
+			  pilota.desplaçamentHoritzontal = -Math.sqrt(6*6 + 6*6);;
+			  pilota.desplaçamentVertical = 0;
+			 
+			  
+			}
+			
+			//si la raqueta 1 NO es mou
+			if(EncaraNoHaEstatTocada === true && CapOnVaLaRaquetaEsquerra === 0 &&
+			   pilota.y + pilota.radi >= Raqueta1.y &&
+			   pilota.y - pilota.radi <= Raqueta1.y + 3*(alturaRaquetes / 3)&& 
+			   pilota.x + pilota.radi >= Raqueta1.x && 
+			   pilota.x - pilota.radi <= Raqueta1.x + ampladaRaquetes){
+			   
+			  EncaraNoHaEstatTocada = false;
+			  pilota.desplaçamentHoritzontal = Math.sqrt(6*6 + 6*6);;
+			  pilota.desplaçamentVertical = 0;
+			  
+			   
+			}
+			
+			if(EncaraNoHaEstatTocada === true && CapOnVaLaRaquetaDreta === 0 &&
+			   pilota.y + pilota.radi >= Raqueta2.y &&
+			   pilota.y - pilota.radi <= Raqueta2.y + 3*(alturaRaquetes / 3) &&
+			   pilota.x + pilota.radi >= Raqueta2.x && 
+			   pilota.x - pilota.radi <= Raqueta2.x + ampladaRaquetes){
+			   
+			  EncaraNoHaEstatTocada = false;
+			  pilota.desplaçamentHoritzontal = -Math.sqrt(6*6 + 6*6);;
+			  pilota.desplaçamentVertical = 0;
+			   
+			}
+			
+			
+		 } 
+			
+			//si no val zero es torna a repetir per veure si el programa pot entrar a la seguent iteracio
+			else{
+				pilota.desplaçamentHoritzontal = Math.floor(Math.random() * (5 - (-5)) + (-5));
+			}
+		}
+			
+		setInterval(loop,7);
+		},1000);		
+			
+		
+		
+	
+		
+			
+		
+	  </script>
+</body>
+
+</html>
